@@ -1,0 +1,147 @@
+<p-card header="Harvesting-Plan für Elektrolyse-Gruppen">
+  <div class="layout">
+    <div class="form-area">
+      <form [formGroup]="form">
+        <p-panel header="Parameter">
+          <div class="form-grid">
+            <div class="field">
+              <label for="groupCount">Anzahl Gruppen</label>
+              <p-inputNumber
+                inputId="groupCount"
+                [min]="1"
+                [max]="100"
+                [useGrouping]="false"
+                formControlName="groupCount"
+              ></p-inputNumber>
+            </div>
+            <div class="field">
+              <label for="anodeDays">Anodenzeitraum (Tage)</label>
+              <p-inputNumber
+                inputId="anodeDays"
+                [min]="1"
+                [max]="365"
+                [useGrouping]="false"
+                formControlName="anodeDays"
+              ></p-inputNumber>
+            </div>
+            <div class="field three-columns">
+              <label>Kathoden-Aufteilung (Tage)</label>
+              <div class="cathode-grid">
+                <span>A</span>
+                <p-inputNumber [useGrouping]="false" [min]="0" formControlName="cathodeA"></p-inputNumber>
+                <span>B</span>
+                <p-inputNumber [useGrouping]="false" [min]="0" formControlName="cathodeB"></p-inputNumber>
+                <span>C</span>
+                <p-inputNumber [useGrouping]="false" [min]="0" formControlName="cathodeC"></p-inputNumber>
+              </div>
+              <div class="cathode-actions">
+                <span class="sum">Summe: {{ cathodeSum }}</span>
+                <button type="button" pButton label="Auf anodeDays normalisieren" (click)="normalizeCathodes()"></button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="cleaningDays">Reinigung nach Entfernen (Tage)</label>
+              <p-inputNumber
+                inputId="cleaningDays"
+                [useGrouping]="false"
+                [min]="0"
+                [max]="60"
+                formControlName="cleaningDays"
+              ></p-inputNumber>
+            </div>
+            <div class="field">
+              <label for="harvestOrder">Reihenfolge der Gruppen</label>
+              <p-inputText
+                inputId="harvestOrder"
+                formControlName="harvestOrder"
+                placeholder="z.B. 1,2,3,4"
+              ></p-inputText>
+              <small>Permutation aller Gruppen, getrennt durch Komma/Leerzeichen.</small>
+            </div>
+            <div class="field">
+              <label for="groupStartOffsetDays">Startversatz zwischen Gruppen (Tage)</label>
+              <p-inputNumber
+                inputId="groupStartOffsetDays"
+                [useGrouping]="false"
+                [min]="0"
+                [max]="30"
+                formControlName="groupStartOffsetDays"
+              ></p-inputNumber>
+            </div>
+          </div>
+          <div class="buttons">
+            <button type="button" pButton label="Plan generieren" icon="pi pi-refresh" (click)="generatePlan()"></button>
+            <button
+              type="button"
+              pButton
+              label="Auf Defaults zurücksetzen"
+              class="p-button-secondary"
+              (click)="resetDefaults()"
+            ></button>
+            <button
+              type="button"
+              pButton
+              label="Export CSV"
+              class="p-button-help"
+              (click)="exportCsv()"
+              [disabled]="!plan.length"
+            ></button>
+          </div>
+          <p-messages *ngIf="messages.length" [value]="messages"></p-messages>
+          <p-message
+            *ngIf="cathodeSumMismatch"
+            severity="warn"
+            text="Kathoden-Summe weicht von Anodenzeitraum ab."
+          ></p-message>
+        </p-panel>
+      </form>
+    </div>
+    <div class="timeline-area" *ngIf="plan.length">
+      <p-panel header="Zeitachse">
+        <div class="scale" [style.gridTemplateColumns]="'repeat(' + maxPlanDay + ', 1fr)'">
+          <div *ngFor="let day of maxDaysArray" class="scale-day" [class.major]="day === 1 || day % 5 === 0">{{ day }}</div>
+        </div>
+        <div class="lanes">
+          <div class="lane" *ngFor="let group of plan">
+            <div class="lane-label">Gruppe {{ group.group }}</div>
+            <div class="lane-bars">
+              <div
+                class="phase"
+                *ngFor="let phase of group.phases"
+                [ngClass]="phaseClass(phase.type)"
+                pTooltip="{{ phase.name }}: Tag {{ phase.startDay }} - {{ phase.endDay }} ({{ phase.durationDays }} T)"
+                tooltipPosition="top"
+                [ngStyle]="barStyle(phase)"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </p-panel>
+    </div>
+  </div>
+</p-card>
+
+<p-panel header="Plan-Details" *ngIf="plan.length">
+  <p-table [value]="plan" [tableStyle]="{ 'min-width': '600px' }">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Gruppe</th>
+        <th>Starttag</th>
+        <th>Endtag</th>
+        <th>CathodeOut Zeitraum</th>
+        <th>Harvest-Tag</th>
+        <th>Cleaning</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>{{ row.group }}</td>
+        <td>{{ row.startDay }}</td>
+        <td>{{ row.endDay }}</td>
+        <td>{{ row.cathodeOutRange }}</td>
+        <td>{{ row.harvestDay }}</td>
+        <td>{{ row.cleaningRange || '-' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-panel>
