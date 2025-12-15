@@ -78,7 +78,6 @@ export class HarvestPlanComponent implements OnInit {
   form: FormGroup;
   plan: GroupPlan[] = [];
   maxPlanDay = 0;
-  timelineDays = 42;
   messages: { severity: 'error' | 'warn' | 'info'; detail: string }[] = [];
   readonly defaults = {
     groupCount: 8,
@@ -156,7 +155,6 @@ export class HarvestPlanComponent implements OnInit {
 
     this.plan = this.buildPlan(inputs);
     this.maxPlanDay = this.plan.reduce((max, gp) => Math.max(max, gp.endDay), 0);
-    this.timelineDays = Math.max(42, this.maxPlanDay || 0);
   }
 
   exportCsv(): void {
@@ -191,12 +189,12 @@ export class HarvestPlanComponent implements OnInit {
   }
 
   get maxDaysArray(): number[] {
-    return Array.from({ length: this.timelineDays }, (_, i) => i + 1);
+    return Array.from({ length: this.maxPlanDay }, (_, i) => i + 1);
   }
 
   barStyle(phase: PlanPhase): Record<string, string> {
-    const left = ((phase.startDay - 1) / this.timelineDays) * 100;
-    const width = (phase.durationDays / this.timelineDays) * 100;
+    const left = ((phase.startDay - 1) / this.maxPlanDay) * 100;
+    const width = (phase.durationDays / this.maxPlanDay) * 100;
     return {
       left: `${left}%`,
       width: `${width}%`,

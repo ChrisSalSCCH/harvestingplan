@@ -97,8 +97,8 @@
       </form>
     </div>
     <div class="timeline-area" *ngIf="plan.length">
-      <p-panel header="Zeitachse (nächste 6 Wochen)">
-        <div class="scale" [style.gridTemplateColumns]="'repeat(' + timelineDays + ', 1fr)'">
+      <p-panel header="Zeitachse">
+        <div class="scale" [style.gridTemplateColumns]="'repeat(' + maxPlanDay + ', 1fr)'">
           <div *ngFor="let day of maxDaysArray" class="scale-day" [class.major]="day === 1 || day % 5 === 0">{{ day }}</div>
         </div>
         <div class="lanes">
